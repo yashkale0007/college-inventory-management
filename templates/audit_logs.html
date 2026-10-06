@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Audit Logs & Stock Ledger | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-5">
+  
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1 text-white"><i class="bi bi-journal-text text-info me-2"></i>Institutional Inventory Audit Trail</h2>
+      <p class="text-secondary small m-0">Immutable record of all stock replenishments, reservations, releases, and withdrawals for accreditation & compliance.</p>
+    </div>
+    <div>
+      <button class="btn btn-cims-outline" onclick="window.print()">
+        <i class="bi bi-printer me-1"></i> Print / Export Report
+      </button>
+    </div>
+  </div>
+
+  <div class="card glass-card p-4 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-cims">
+        <thead>
+          <tr>
+            <th>Tx ID</th>
+            <th>Date & Timestamp</th>
+            <th>Asset / Material</th>
+            <th>Category</th>
+            <th>Transaction Type</th>
+            <th>Quantity</th>
+            <th>Authorized Operator</th>
+            <th>Operational Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for t in transactions %}
+            <tr>
+              <td>
+                <span class="badge bg-dark text-info border border-info border-opacity-25 font-monospace">#{{ t.transaction_id }}</span>
+              </td>
+              <td>
+                <span class="small text-light fw-semibold">{{ t.created_at }}</span>
+              </td>
+              <td>
+                <span class="fw-bold text-white">{{ t.item_name }}</span>
+              </td>
+              <td>
+                <span class="badge bg-secondary-subtle text-secondary">{{ t.category_name }}</span>
+              </td>
+              <td>
+                {% if t.transaction_type == 'stock_in' %}
+                  <span class="badge bg-success-subtle text-success border border-success-subtle"><i class="bi bi-plus-circle me-1"></i> Stock In</span>
+                {% elif t.transaction_type == 'reservation' %}
+                  <span class="badge bg-primary-subtle text-info border border-info border-opacity-25"><i class="bi bi-lock me-1"></i> Reserved</span>
+                {% elif t.transaction_type == 'withdrawal' %}
+                  <span class="badge bg-danger-subtle text-danger border border-danger-subtle"><i class="bi bi-box-arrow-up me-1"></i> Withdrawn</span>
+                {% elif t.transaction_type == 'release' %}
+                  <span class="badge bg-warning-subtle text-warning border border-warning-subtle"><i class="bi bi-unlock me-1"></i> Released</span>
+                {% else %}
+                  <span class="badge bg-dark text-light border border-secondary">{{ t.transaction_type }}</span>
+                {% endif %}
+              </td>
+              <td>
+                <span class="fw-bold fs-6 text-light">{{ t.quantity }}</span> <small class="text-secondary">{{ t.unit }}</small>
+              </td>
+              <td>
+                <div class="small fw-semibold text-info">{{ t.performed_by }}</div>
+              </td>
+              <td>
+                <div class="small text-secondary">{{ t.remarks or 'N/A' }}</div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+{% endblock %}
