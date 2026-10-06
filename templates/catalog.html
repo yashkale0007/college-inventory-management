@@ -1,0 +1,121 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Catalog | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <!-- Header -->
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4 pb-2 border-bottom border-dark">
+    <div>
+      <h2 class="fw-bold mb-1 text-white"><i class="bi bi-grid-3x3-gap-fill text-info me-2"></i>Institutional Stock Catalog</h2>
+      <p class="text-secondary small m-0">Live directory of laboratory apparatus, scientific chemicals, computing peripherals, and stationery.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('request_goods') }}" class="btn btn-cims-primary">
+        <i class="bi bi-plus-circle me-1"></i> Submit Requisition
+      </a>
+      <a href="{{ url_for('track') }}" class="btn btn-cims-outline">
+        <i class="bi bi-search me-1"></i> Track Existing
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Filter Card -->
+  <div class="card glass-card p-3 mb-4">
+    <form action="{{ url_for('catalog') }}" method="GET" class="row g-2 align-items-center">
+      <div class="col-md-5">
+        <div class="input-group">
+          <span class="input-group-text"><i class="bi bi-search text-info"></i></span>
+          <input type="text" name="q" class="form-control" placeholder="Search by item name, apparatus, or specification..." value="{{ search_q }}">
+        </div>
+      </div>
+      <div class="col-md-3">
+        <select name="category_id" class="form-select">
+          <option value="">All Categories</option>
+          {% for cat in categories %}
+            <option value="{{ cat.category_id }}" {% if selected_cat == cat.category_id %}selected{% endif %}>{{ cat.category_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-3">
+        <select name="department" class="form-select">
+          <option value="">All Departments</option>
+          {% for dept in departments %}
+            <option value="{{ dept }}" {% if selected_dept == dept %}selected{% endif %}>{{ dept }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-1 d-flex gap-1">
+        <button type="submit" class="btn btn-cims-primary w-100"><i class="bi bi-funnel-fill"></i></button>
+        {% if search_q or selected_cat or selected_dept %}
+          <a href="{{ url_for('catalog') }}" class="btn btn-dark border border-secondary" title="Reset Filters"><i class="bi bi-arrow-clockwise"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Catalog Grid -->
+  {% if items %}
+    <div class="row g-4">
+      {% for item in items %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 glass-card interactive-card p-4 d-flex flex-column">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <span class="badge bg-dark text-info border border-info border-opacity-25 px-2 py-1 small">
+                {{ item.category_name }}
+              </span>
+              {% if item.available_quantity > item.minimum_quantity %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                  <i class="bi bi-check2-circle me-1"></i> Available
+                </span>
+              {% elif item.available_quantity > 0 %}
+                <span class="badge bg-warning-subtle text-warning border border-warning-subtle px-2 py-1">
+                  <i class="bi bi-exclamation-triangle me-1"></i> Low Stock
+                </span>
+              {% else %}
+                <span class="badge bg-danger text-white px-2 py-1">
+                  <i class="bi bi-dash-circle me-1"></i> Out of Stock
+                </span>
+              {% endif %}
+            </div>
+
+            <h5 class="fw-bold text-white mb-2">{{ item.item_name }}</h5>
+            <p class="text-secondary small mb-3 flex-grow-1">{{ item.description or 'Standard college academic resource.' }}</p>
+
+            <div class="p-3 rounded-3 small mb-3 border border-secondary border-opacity-25" style="background: rgba(7, 10, 18, 0.6);">
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-secondary"><i class="bi bi-building me-1 text-info"></i> Department:</span>
+                <span class="fw-semibold text-light">{{ item.department }}</span>
+              </div>
+              <div class="d-flex justify-content-between mb-1">
+                <span class="text-secondary"><i class="bi bi-geo-alt me-1 text-warning"></i> Storage Point:</span>
+                <span class="fw-semibold text-light">{{ item.location }}</span>
+              </div>
+              <div class="d-flex justify-content-between border-top border-secondary border-opacity-25 pt-2 mt-2">
+                <span class="text-secondary">Real-Time Available:</span>
+                <span class="fw-bold {% if item.available_quantity > 0 %}text-success{% else %}text-danger{% endif %}">
+                  {{ item.available_quantity }} {{ item.unit }}
+                  <small class="text-secondary fw-normal">(Total: {{ item.physical_quantity }})</small>
+                </span>
+              </div>
+            </div>
+
+            <div class="mt-auto">
+              <a href="{{ url_for('request_goods', item_id=item.item_id) }}" class="btn btn-cims-primary w-100">
+                <i class="bi bi-send-fill me-1"></i> Requisition Item
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  {% else %}
+    <div class="card glass-card p-5 text-center my-4">
+      <div class="stat-icon bg-dark text-info mx-auto mb-3 fs-2 border border-info border-opacity-25"><i class="bi bi-search"></i></div>
+      <h4 class="fw-bold text-white">No Products Found</h4>
+      <p class="text-secondary small">No items matched your search criteria. Try removing filters or searching for alternative apparatus.</p>
+      <a href="{{ url_for('catalog') }}" class="btn btn-cims-outline mx-auto">Clear Filters</a>
+    </div>
+  {% endif %}
+</div>
+{% endblock %}
