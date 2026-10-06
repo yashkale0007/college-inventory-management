@@ -1,0 +1,212 @@
+{% extends "base.html" %}
+
+{% block title %}Manage Requests | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-5">
+  
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1 text-white"><i class="bi bi-inbox-fill text-info me-2"></i>Requisition Workflow Management</h2>
+      <p class="text-secondary small m-0">Review incoming student & teacher equipment requests in three stages: Pending, Approved, and Declined.</p>
+    </div>
+    <div class="d-flex gap-2">
+      <a href="{{ url_for('manage_inventory') }}" class="btn btn-cims-outline">
+        <i class="bi bi-boxes me-1"></i> Check Inventory
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters Bar -->
+  <div class="card glass-card p-3 mb-4 shadow-sm">
+    <form action="{{ url_for('manage_requests') }}" method="GET" class="row g-2 align-items-center">
+      
+      <div class="col-md-3">
+        <input type="text" name="q" class="form-control" placeholder="Search by Tracking Code, Requester, or Item..." value="{{ search_q }}">
+      </div>
+
+      <div class="col-md-2">
+        <select name="status" class="form-select" onchange="this.form.submit()">
+          <option value="all" {% if status_filter == 'all' %}selected{% endif %}>All Workflow Stages</option>
+          <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending Review</option>
+          <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved (Reserved)</option>
+          <option value="completed" {% if status_filter == 'completed' %}selected{% endif %}>Completed / Delivered</option>
+          <option value="declined" {% if status_filter == 'declined' %}selected{% endif %}>Declined</option>
+        </select>
+      </div>
+
+      <div class="col-md-3">
+        <select name="department" class="form-select" onchange="this.form.submit()">
+          <option value="all" {% if dept_filter == 'all' %}selected{% endif %}>All Departments</option>
+          {% for dept in departments %}
+            <option value="{{ dept }}" {% if dept_filter == dept %}selected{% endif %}>{{ dept }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div class="col-md-2">
+        <select name="type" class="form-select" onchange="this.form.submit()">
+          <option value="all" {% if type_filter == 'all' %}selected{% endif %}>All Requesters</option>
+          <option value="student" {% if type_filter == 'student' %}selected{% endif %}>Students</option>
+          <option value="faculty" {% if type_filter == 'faculty' %}selected{% endif %}>Teachers / Faculty</option>
+        </select>
+      </div>
+
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-cims-primary w-100">Filter</button>
+        {% if search_q or status_filter != 'all' or dept_filter != 'all' or type_filter != 'all' %}
+          <a href="{{ url_for('manage_requests') }}" class="btn btn-dark border border-secondary" title="Reset Filters"><i class="bi bi-arrow-clockwise"></i></a>
+        {% endif %}
+      </div>
+
+    </form>
+  </div>
+
+  <!-- Requisitions Data Table -->
+  <div class="card glass-card shadow-sm p-4">
+    {% if requests_list %}
+      <div class="table-responsive">
+        <table class="table table-cims">
+          <thead>
+            <tr>
+              <th>Tracking Code</th>
+              <th>Requester Details</th>
+              <th>Product Requested</th>
+              <th>Stock Status</th>
+              <th>Urgency & Purpose</th>
+              <th>Stage</th>
+              <th class="text-end">Workflow Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for r in requests_list %}
+              <tr>
+                <td>
+                  <span class="fw-bold font-monospace text-white fs-6">{{ r.tracking_code }}</span>
+                  <div class="small text-secondary">{{ r.created_at[:16] }}</div>
+                </td>
+                
+                <td>
+                  <div class="fw-bold text-white">{{ r.requester_name }}</div>
+                  <div class="small text-secondary">{{ r.department }}</div>
+                  <div>
+                    <span class="badge {% if r.requester_type == 'student' %}bg-info-subtle text-info border border-info border-opacity-25{% else %}bg-primary-subtle text-primary border border-primary border-opacity-25{% endif %} text-uppercase" style="font-size: 0.65rem;">
+                      {{ r.requester_type }}
+                    </span>
+                    <span class="text-secondary small ms-1">{{ r.requester_email }}</span>
+                  </div>
+                </td>
+
+                <td>
+                  <div class="fw-bold text-white">{{ r.item_name }}</div>
+                  <span class="badge bg-dark text-secondary border border-secondary">{{ r.category_name }}</span>
+                </td>
+
+                <td>
+                  <div class="fw-bold fs-6 text-info">{{ r.requested_quantity }} {{ r.unit }}</div>
+                  <div class="small text-secondary">
+                    Avail: <strong class="{% if r.available_quantity < r.requested_quantity %}text-danger{% else %}text-success{% endif %}">{{ r.available_quantity }}</strong> 
+                    (Res: {{ r.reserved_quantity }})
+                  </div>
+                </td>
+
+                <td style="max-width: 240px;">
+                  {% if r.urgency == 'Critical' %}
+                    <span class="badge bg-danger text-white mb-1"><i class="bi bi-exclamation-triangle-fill me-1"></i> Critical</span>
+                  {% elif r.urgency == 'High' %}
+                    <span class="badge bg-warning text-dark mb-1">High</span>
+                  {% else %}
+                    <span class="badge bg-dark text-secondary border border-secondary mb-1">Normal</span>
+                  {% endif %}
+                  <div class="text-truncate small text-secondary" title="{{ r.purpose }}">
+                    "{{ r.purpose }}"
+                  </div>
+                  {% if r.rejection_reason %}
+                    <div class="text-danger small mt-1"><strong>Reason:</strong> {{ r.rejection_reason }}</div>
+                  {% endif %}
+                </td>
+
+                <td>
+                  {% if r.status == 'pending' %}
+                    <span class="badge-status badge-pending"><i class="bi bi-hourglass-split"></i> Pending</span>
+                  {% elif r.status == 'approved' %}
+                    <span class="badge-status badge-approved"><i class="bi bi-check-circle-fill"></i> Approved</span>
+                  {% elif r.status in ['completed', 'withdrawn'] %}
+                    <span class="badge-status badge-completed"><i class="bi bi-box2-check-fill"></i> Fulfilled</span>
+                  {% elif r.status == 'declined' %}
+                    <span class="badge-status badge-declined"><i class="bi bi-x-circle-fill"></i> Declined</span>
+                  {% endif %}
+                </td>
+
+                <td class="text-end">
+                  {% if r.status == 'pending' %}
+                    <div class="btn-group">
+                      <form action="{{ url_for('approve_request', req_id=r.request_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-success fw-bold px-3" {% if r.available_quantity < r.requested_quantity %}disabled title="Cannot approve: Insufficient stock"{% endif %}>
+                          <i class="bi bi-check-lg me-1"></i> Approve
+                        </button>
+                      </form>
+                      <button type="button" class="btn btn-sm btn-outline-danger" onclick="openDeclineModal('{{ r.request_id }}', '{{ r.tracking_code }}')">
+                        <i class="bi bi-x-lg me-1"></i> Decline
+                      </button>
+                    </div>
+                  {% elif r.status == 'approved' %}
+                    <div class="btn-group">
+                      <form action="{{ url_for('complete_request', req_id=r.request_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-primary fw-bold" title="Hand over physical item to student/teacher">
+                          <i class="bi bi-box-seam me-1"></i> Mark Delivered
+                        </button>
+                      </form>
+                      <button type="button" class="btn btn-sm btn-outline-danger" onclick="openDeclineModal('{{ r.request_id }}', '{{ r.tracking_code }}')" title="Revoke Approval">
+                        <i class="bi bi-x-circle"></i>
+                      </button>
+                    </div>
+                  {% elif r.status == 'completed' %}
+                    <span class="text-success small fw-semibold"><i class="bi bi-check2-all me-1"></i> Completed</span>
+                  {% elif r.status == 'declined' %}
+                    <span class="text-danger small fw-semibold"><i class="bi bi-dash-circle me-1"></i> Rejected</span>
+                  {% endif %}
+                </td>
+              </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    {% else %}
+      <div class="p-5 text-center text-secondary">
+        <i class="bi bi-inbox fs-1 d-block mb-3"></i>
+        <h5 class="fw-bold text-white">No Requisitions Match Criteria</h5>
+        <p class="small">Try adjusting status, department, or keyword filters.</p>
+        <a href="{{ url_for('manage_requests') }}" class="btn btn-sm btn-cims-outline">Clear Filters</a>
+      </div>
+    {% endif %}
+  </div>
+
+</div>
+
+<!-- Modal: Decline Request with Justification -->
+<div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form id="declineForm" method="POST">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-shield-x me-2"></i>Decline Requisition</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p>You are declining requisition <strong id="declineModalTrackingCode" class="text-white"></strong>.</p>
+          <div class="mb-3">
+            <label for="rejection_reason" class="form-label fw-semibold small text-light">Mandatory Justification / Remarks <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="rejection_reason" id="rejection_reason" rows="3" placeholder="Provide reason for student or teacher..." required></textarea>
+            <div class="small text-secondary mt-1">This explanation will be permanently recorded in the audit trail and displayed on the requester tracking page.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger fw-bold">Confirm Decline</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
