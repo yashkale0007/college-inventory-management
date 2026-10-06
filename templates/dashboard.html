@@ -1,0 +1,238 @@
+{% extends "base.html" %}
+
+{% block title %}Faculty Console Dashboard | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-5">
+  
+  <!-- Top Welcome Banner -->
+  <div class="card glass-card p-4 mb-4 shadow-sm animate-fade-in-up">
+    <div class="row align-items-center">
+      <div class="col-md-8">
+        <div class="d-flex align-items-center gap-3">
+          <div class="stat-icon bg-primary text-white rounded-circle fs-3 shadow">
+            <i class="bi bi-mortarboard"></i>
+          </div>
+          <div>
+            <h3 class="fw-bold m-0 text-white">Welcome, {{ session.user_name }}</h3>
+            <div class="d-flex align-items-center gap-2 mt-1">
+              <span class="badge bg-primary text-uppercase">{{ session.role }}</span>
+              <span class="text-secondary small"><i class="bi bi-building me-1 text-info"></i>{{ session.department }}</span>
+              <span class="text-secondary small">• Shri Shivaji Science College Amravati</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="col-md-4 text-md-end mt-3 mt-md-0">
+        <a href="{{ url_for('manage_requests') }}" class="btn btn-cims-primary me-2">
+          <i class="bi bi-inbox-fill me-1"></i> Review Requests
+        </a>
+        <a href="{{ url_for('manage_inventory') }}" class="btn btn-cims-outline">
+          <i class="bi bi-boxes me-1"></i> Stock Registry
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- KPI Metric Cards Grid -->
+  <div class="row g-4 mb-4">
+    <div class="col-sm-6 col-xl-3">
+      <div class="stat-card border-start border-warning border-4">
+        <div>
+          <span class="text-secondary small text-uppercase fw-bold">Pending Review</span>
+          <h2 class="fw-bold my-1 text-warning">{{ pending_requests }}</h2>
+          <span class="small text-muted">Awaiting decision</span>
+        </div>
+        <div class="stat-icon bg-warning-subtle text-warning"><i class="bi bi-hourglass-split"></i></div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="stat-card border-start border-primary border-4">
+        <div>
+          <span class="text-secondary small text-uppercase fw-bold">Approved / Reserved</span>
+          <h2 class="fw-bold my-1 text-info">{{ approved_requests }}</h2>
+          <span class="small text-muted">Ready for collection</span>
+        </div>
+        <div class="stat-icon bg-primary-subtle text-info"><i class="bi bi-check-circle"></i></div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="stat-card border-start border-success border-4">
+        <div>
+          <span class="text-secondary small text-uppercase fw-bold">Fulfilled Orders</span>
+          <h2 class="fw-bold my-1 text-success">{{ completed_requests }}</h2>
+          <span class="small text-muted">Stock deducted</span>
+        </div>
+        <div class="stat-icon bg-success-subtle text-success"><i class="bi bi-box-seam"></i></div>
+      </div>
+    </div>
+
+    <div class="col-sm-6 col-xl-3">
+      <div class="stat-card border-start border-danger border-4">
+        <div>
+          <span class="text-secondary small text-uppercase fw-bold">Low Stock Warning</span>
+          <h2 class="fw-bold my-1 text-danger">{{ low_stock_items }}</h2>
+          <span class="small text-muted">At or below threshold</span>
+        </div>
+        <div class="stat-icon bg-danger-subtle text-danger"><i class="bi bi-exclamation-triangle"></i></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="row g-4">
+    <!-- Left: Incoming Recent Requisitions Queue -->
+    <div class="col-lg-8">
+      <div class="card glass-card p-4 h-100 shadow-sm">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+          <div>
+            <h5 class="fw-bold m-0 text-white"><i class="bi bi-inbox-fill text-info me-2"></i>Recent Requisitions Queue</h5>
+            <small class="text-secondary">Student & Teacher goods requests across collegiate departments</small>
+          </div>
+          <a href="{{ url_for('manage_requests') }}" class="btn btn-sm btn-cims-outline">View Full Queue &rarr;</a>
+        </div>
+
+        <div class="table-responsive">
+          <table class="table table-cims">
+            <thead>
+              <tr>
+                <th>Tracking Code</th>
+                <th>Requester</th>
+                <th>Item & Dept</th>
+                <th>Qty</th>
+                <th>Stage</th>
+                <th class="text-end">Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in recent_requests %}
+                <tr>
+                  <td>
+                    <span class="fw-bold text-white font-monospace">{{ r.tracking_code }}</span>
+                    <br><span class="badge bg-dark text-info border border-info border-opacity-25 text-uppercase" style="font-size: 0.65rem;">{{ r.requester_type }}</span>
+                  </td>
+                  <td>
+                    <div class="fw-bold text-white">{{ r.requester_name }}</div>
+                    <div class="small text-secondary">{{ r.department }}</div>
+                  </td>
+                  <td>
+                    <div class="fw-semibold text-light">{{ r.item_name }}</div>
+                    <div class="small text-info">Avail: {{ r.available_quantity }}</div>
+                  </td>
+                  <td>
+                    <span class="badge bg-dark text-light border border-secondary fw-bold fs-6">{{ r.requested_quantity }}</span>
+                  </td>
+                  <td>
+                    {% if r.status == 'pending' %}
+                      <span class="badge-status badge-pending">Pending</span>
+                    {% elif r.status == 'approved' %}
+                      <span class="badge-status badge-approved">Approved</span>
+                    {% elif r.status in ['completed', 'withdrawn'] %}
+                      <span class="badge-status badge-completed">Fulfilled</span>
+                    {% elif r.status == 'declined' %}
+                      <span class="badge-status badge-declined">Declined</span>
+                    {% endif %}
+                  </td>
+                  <td class="text-end">
+                    {% if r.status == 'pending' %}
+                      <div class="btn-group btn-group-sm">
+                        <form action="{{ url_for('approve_request', req_id=r.request_id) }}" method="POST" class="d-inline">
+                          <button type="submit" class="btn btn-success" title="Approve Request & Reserve Stock"><i class="bi bi-check-lg"></i></button>
+                        </form>
+                        <button type="button" class="btn btn-danger" onclick="openDeclineModal('{{ r.request_id }}', '{{ r.tracking_code }}')" title="Decline with Remarks"><i class="bi bi-x-lg"></i></button>
+                      </div>
+                    {% elif r.status == 'approved' %}
+                      <form action="{{ url_for('complete_request', req_id=r.request_id) }}" method="POST" class="d-inline">
+                        <button type="submit" class="btn btn-sm btn-primary" title="Confirm Physical Handover"><i class="bi bi-box-arrow-right me-1"></i> Handover</button>
+                      </form>
+                    {% else %}
+                      <span class="text-secondary small">—</span>
+                    {% endif %}
+                  </td>
+                </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Right: Critical Low-Stock Alerts & Recent Transactions -->
+    <div class="col-lg-4">
+      
+      <!-- Low Stock Alert Box -->
+      <div class="card glass-card p-4 mb-4 shadow-sm">
+        <h6 class="fw-bold text-danger text-uppercase mb-3"><i class="bi bi-bell-fill me-2"></i>Critical Stock Alerts</h6>
+        {% if low_stock_list %}
+          <div class="list-group list-group-flush bg-transparent">
+            {% for item in low_stock_list %}
+              <div class="list-group-item bg-transparent px-0 py-2 border-secondary border-opacity-25 d-flex justify-content-between align-items-center">
+                <div>
+                  <div class="fw-bold small text-white">{{ item.item_name }}</div>
+                  <div class="text-secondary" style="font-size: 0.75rem;">{{ item.department }}</div>
+                </div>
+                <div class="text-end">
+                  <span class="badge bg-danger">{{ item.available_quantity }} {{ item.unit }}</span>
+                  <div class="text-secondary" style="font-size: 0.7rem;">Min: {{ item.minimum_quantity }}</div>
+                </div>
+              </div>
+            {% endfor %}
+          </div>
+          <a href="{{ url_for('manage_inventory') }}" class="btn btn-cims-outline btn-sm w-100 mt-3">Restock Products</a>
+        {% else %}
+          <div class="p-3 text-center text-secondary small rounded-3" style="background: rgba(7, 10, 18, 0.6);">
+            <i class="bi bi-check-circle text-success fs-3 d-block mb-1"></i>
+            All inventory items are currently above their minimum safety thresholds.
+          </div>
+        {% endif %}
+      </div>
+
+      <!-- Quick Recent Audit Activity -->
+      <div class="card glass-card p-4 shadow-sm">
+        <h6 class="fw-bold text-info text-uppercase mb-3"><i class="bi bi-activity me-2"></i>Audit Trail Log</h6>
+        <div class="timeline small">
+          {% for t in recent_transactions %}
+            <div class="mb-3 pb-2 border-bottom border-secondary border-opacity-25">
+              <div class="d-flex justify-content-between">
+                <strong class="text-white">{{ t.item_name }}</strong>
+                <span class="badge bg-dark text-secondary border border-secondary">{{ t.transaction_type }}</span>
+              </div>
+              <div class="text-secondary mt-1">{{ t.remarks }}</div>
+              <div class="text-muted mt-1" style="font-size: 0.72rem;">By: {{ t.performed_by }} • {{ t.created_at[:16] }}</div>
+            </div>
+          {% endfor %}
+        </div>
+        <a href="{{ url_for('audit_logs') }}" class="btn btn-dark border border-secondary btn-sm w-100 mt-2">View Full Ledger</a>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Decline Request with Justification -->
+<div class="modal fade" id="declineModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <form id="declineForm" method="POST">
+        <div class="modal-header bg-danger text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-shield-x me-2"></i>Decline Requisition</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p>You are declining requisition <strong id="declineModalTrackingCode" class="text-white"></strong>.</p>
+          <div class="mb-3">
+            <label for="rejection_reason" class="form-label fw-semibold small text-light">Mandatory Justification / Remarks <span class="text-danger">*</span></label>
+            <textarea class="form-control" name="rejection_reason" id="rejection_reason" rows="3" placeholder="State reason (e.g., Exceeds semester lab quota, reserved for university examinations, insufficient stock)..." required></textarea>
+            <div class="small text-secondary mt-1">This explanation will be immediately visible to the requester on the public tracking portal.</div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-danger fw-bold">Confirm Decline</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
