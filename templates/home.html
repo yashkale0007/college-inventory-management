@@ -1,0 +1,292 @@
+{% extends "base.html" %}
+
+{% block title %}Home | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<!-- Animated Hero Glow Orbs -->
+<div class="hero-glow-orb hero-glow-orb-1"></div>
+<div class="hero-glow-orb hero-glow-orb-2"></div>
+
+<!-- Hero Section -->
+<section class="hero-gradient border-bottom border-dark position-relative">
+  <div class="container py-4">
+    <div class="row align-items-center g-5">
+      <div class="col-lg-7 animate-fade-in-up">
+        
+        <div class="hero-badge">
+          <i class="bi bi-shield-check text-info"></i>
+          <span>Official Smart Digital Inventory Portal</span>
+        </div>
+
+        <h1 class="hero-title mb-3">
+          Collegiate Resource & Stock Governance <br>
+          <span class="text-gradient-electric">Shri Shivaji Science College Amravati</span>
+        </h1>
+
+        <p class="lead text-secondary mb-4" style="max-width: 600px;">
+          Empowering <strong class="text-white">Shri Shivaji Science College Amravati</strong> with real-time laboratory, IT, sports, and stationery requisitions. Teachers and students can request items and monitor progress live <span class="text-info fw-bold">without logging in</span>.
+        </p>
+
+        <!-- Fast Action Buttons -->
+        <div class="d-flex flex-wrap gap-3 mb-4">
+          <a href="{{ url_for('request_goods') }}" class="btn btn-cims-primary btn-lg d-flex align-items-center gap-2">
+            <i class="bi bi-plus-circle-fill"></i> Request a Product
+          </a>
+          <a href="{{ url_for('track') }}" class="btn btn-cims-outline btn-lg d-flex align-items-center gap-2">
+            <i class="bi bi-search"></i> Track Request Status
+          </a>
+          <a href="{{ url_for('catalog') }}" class="btn btn-dark border border-secondary btn-lg d-flex align-items-center gap-2">
+            <i class="bi bi-grid-3x3-gap-fill text-info"></i> Browse Catalog
+          </a>
+        </div>
+
+        <!-- Quick Tracking Search Bar (Glass) -->
+        <div class="glass-card p-2" style="border-radius: 16px; max-width: 580px;">
+          <form action="{{ url_for('track') }}" method="GET" class="d-flex align-items-center gap-2">
+            <div class="input-group">
+              <span class="input-group-text bg-transparent border-0 text-info">
+                <i class="bi bi-upc-scan fs-5"></i>
+              </span>
+              <input type="text" name="code" class="form-control border-0 shadow-none ps-0 bg-transparent text-white" placeholder="Enter tracking code (e.g. SSC-REQ-701)..." required>
+            </div>
+            <button type="submit" class="btn btn-cims-primary px-4 text-nowrap rounded-3">
+              <i class="bi bi-arrow-right-circle me-1"></i> Track Now
+            </button>
+          </form>
+        </div>
+
+      </div>
+
+      <!-- Hero Visual Glass Showcase -->
+      <div class="col-lg-5">
+        <div class="position-relative">
+          <div class="glass-card p-4 shadow-lg">
+            
+            <div class="d-flex justify-content-between align-items-center mb-4">
+              <div class="d-flex align-items-center gap-2">
+                <img src="{{ url_for('static', filename='images/college_logo.svg') }}" width="42" height="42" alt="Emblem" class="rounded-circle shadow">
+                <div>
+                  <h6 class="m-0 fw-bold text-white">Live Inventory Engine</h6>
+                  <small class="text-info">Real-Time Reservation Active</small>
+                </div>
+              </div>
+              <span class="badge bg-success-subtle text-success border border-success-subtle px-2 py-1">
+                <i class="bi bi-broadcast me-1"></i> Live Status
+              </span>
+            </div>
+
+            <!-- Workflow Highlights -->
+            <div class="d-flex flex-column gap-3 mb-4">
+              <div class="p-3 rounded-3" style="background: rgba(30, 58, 138, 0.2); border: 1px solid rgba(59, 130, 246, 0.25);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon bg-primary text-white"><i class="bi bi-1-circle-fill"></i></div>
+                  <div>
+                    <h6 class="mb-0 fw-bold text-white">Instant Request (No Login)</h6>
+                    <small class="text-secondary">Students & teachers requisition apparatus with purpose & urgency.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-3" style="background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.25);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon bg-info text-white"><i class="bi bi-2-circle-fill"></i></div>
+                  <div>
+                    <h6 class="mb-0 fw-bold text-white">3-Stage Faculty Approval</h6>
+                    <small class="text-secondary">Pending, Approved (Reserved Stock), or Declined with remarks.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="p-3 rounded-3" style="background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.25);">
+                <div class="d-flex align-items-center gap-3">
+                  <div class="stat-icon bg-success text-white"><i class="bi bi-3-circle-fill"></i></div>
+                  <div>
+                    <h6 class="mb-0 fw-bold text-white">Handover & Stock Audit</h6>
+                    <small class="text-secondary">Warehouse stock automatically deducted and recorded to ledger.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Faculty Shortcut -->
+            <div class="p-3 rounded-3 text-center border border-secondary" style="background: rgba(15, 23, 42, 0.8);">
+              <span class="small text-secondary d-block mb-2">College Faculty or Administrator?</span>
+              <a href="{{ url_for('login') }}" class="btn btn-cims-outline btn-sm w-100 fw-bold">
+                <i class="bi bi-box-arrow-in-right me-1"></i> Sign In to Faculty Console
+              </a>
+            </div>
+
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Cyber KPI Counters -->
+<section class="py-4 border-bottom border-dark" style="background: rgba(11, 15, 25, 0.6);">
+  <div class="container">
+    <div class="row g-3 text-center">
+      <div class="col-6 col-md-3">
+        <div class="p-3">
+          <div class="fs-1 fw-bold text-info">{{ stats.total_items }}</div>
+          <div class="text-secondary small fw-semibold text-uppercase">Catalogued Assets</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3">
+        <div class="p-3 border-start border-secondary border-opacity-25">
+          <div class="fs-1 fw-bold text-primary">{{ stats.total_categories }}</div>
+          <div class="text-secondary small fw-semibold text-uppercase">Academic Categories</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 border-start border-secondary border-opacity-25">
+        <div class="p-3">
+          <div class="fs-1 fw-bold text-warning">{{ stats.total_requests }}</div>
+          <div class="text-secondary small fw-semibold text-uppercase">Total Requisitions</div>
+        </div>
+      </div>
+      <div class="col-6 col-md-3 border-start border-secondary border-opacity-25">
+        <div class="p-3">
+          <div class="fs-1 fw-bold text-success">{{ stats.completed_requests }}</div>
+          <div class="text-secondary small fw-semibold text-uppercase">Fulfilled Deliveries</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Resource Categories Grid -->
+<section class="py-5">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+      <div>
+        <h6 class="text-info text-uppercase fw-bold mb-1 letter-spacing-1">Resource Catalog</h6>
+        <h2 class="fw-bold m-0 text-white">Explore Department Inventories</h2>
+      </div>
+      <a href="{{ url_for('catalog') }}" class="btn btn-link text-info fw-bold text-decoration-none">
+        View Complete Catalog <i class="bi bi-arrow-right"></i>
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for cat in categories %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 glass-card interactive-card p-4">
+            <div class="d-flex align-items-center gap-3 mb-3">
+              <div class="stat-icon bg-primary-subtle text-info fs-3 border border-info border-opacity-25">
+                <i class="bi {{ cat.icon }}"></i>
+              </div>
+              <div>
+                <h5 class="fw-bold mb-0 text-white">{{ cat.category_name }}</h5>
+                <span class="badge bg-dark text-info border border-info border-opacity-25">{{ cat.item_count }} Items Stocked</span>
+              </div>
+            </div>
+            <p class="text-secondary small mb-4 flex-grow-1">{{ cat.description }}</p>
+            <div class="d-flex justify-content-between align-items-center pt-2 border-top border-secondary border-opacity-25">
+              <a href="{{ url_for('catalog', category_id=cat.category_id) }}" class="btn btn-sm btn-outline-info rounded-pill px-3">
+                Explore Items
+              </a>
+              <a href="{{ url_for('request_goods') }}" class="small text-info fw-semibold text-decoration-none">
+                Make Requisition &rarr;
+              </a>
+            </div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- Featured Inventory Items Available for Request -->
+<section class="py-5" style="background: rgba(11, 17, 32, 0.4);">
+  <div class="container">
+    <div class="d-flex flex-wrap justify-content-between align-items-end mb-4">
+      <div>
+        <h6 class="text-info text-uppercase fw-bold mb-1">Instant Requisition</h6>
+        <h2 class="fw-bold m-0 text-white">Frequently Requested College Equipment</h2>
+      </div>
+      <a href="{{ url_for('request_goods') }}" class="btn btn-cims-primary">
+        <i class="bi bi-plus-lg me-1"></i> Submit Custom Request
+      </a>
+    </div>
+
+    <div class="row g-4">
+      {% for item in items %}
+        <div class="col-md-6 col-lg-4">
+          <div class="card h-100 glass-card p-4 interactive-card position-relative">
+            <div class="d-flex justify-content-between align-items-start mb-2">
+              <span class="badge bg-dark text-secondary border border-secondary small">{{ item.category_name }}</span>
+              {% if item.available_quantity > 0 %}
+                <span class="badge bg-success-subtle text-success border border-success-subtle">
+                  <i class="bi bi-check-circle me-1"></i> {{ item.available_quantity }} {{ item.unit }} In Stock
+                </span>
+              {% else %}
+                <span class="badge bg-danger-subtle text-danger border border-danger-subtle">
+                  <i class="bi bi-x-circle me-1"></i> Fully Reserved
+                </span>
+              {% endif %}
+            </div>
+
+            <h5 class="fw-bold text-white mb-2">{{ item.item_name }}</h5>
+            <p class="text-secondary small mb-3 flex-grow-1">{{ item.description }}</p>
+
+            <div class="p-2 rounded-3 small mb-3 border border-secondary border-opacity-25" style="background: rgba(7, 10, 18, 0.6);">
+              <div class="d-flex justify-content-between text-secondary">
+                <span><i class="bi bi-building me-1 text-info"></i> Dept:</span>
+                <span class="fw-semibold text-light">{{ item.department }}</span>
+              </div>
+              <div class="d-flex justify-content-between text-secondary mt-1">
+                <span><i class="bi bi-geo-alt me-1 text-warning"></i> Location:</span>
+                <span class="fw-semibold text-light">{{ item.location }}</span>
+              </div>
+            </div>
+
+            <a href="{{ url_for('request_goods', item_id=item.item_id) }}" class="btn btn-sm {% if item.available_quantity > 0 %}btn-cims-primary{% else %}btn-outline-secondary{% endif %} w-100 py-2">
+              <i class="bi bi-send-plus me-1"></i> Request This Item
+            </a>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+  </div>
+</section>
+
+<!-- How It Works Section -->
+<section class="py-5 border-top border-dark">
+  <div class="container text-center">
+    <h6 class="text-info text-uppercase fw-bold mb-2">Transparent Procedure</h6>
+    <h2 class="fw-bold mb-5 text-white">How Requisitions Work in 4 Steps</h2>
+
+    <div class="row g-4 text-start">
+      <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 border-0">
+          <div class="stat-icon bg-primary text-white mb-3 fw-bold fs-4">1</div>
+          <h5 class="fw-bold text-white">Browse Products</h5>
+          <p class="text-secondary small">Search active laboratory, sports, IT, or stationery products with real-time stock balances.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 border-0">
+          <div class="stat-icon bg-info text-white mb-3 fw-bold fs-4">2</div>
+          <h5 class="fw-bold text-white">Submit Request</h5>
+          <p class="text-secondary small">Provide student/teacher credentials, required quantity, and academic purpose without logging in.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 border-0">
+          <div class="stat-icon bg-warning text-dark mb-3 fw-bold fs-4">3</div>
+          <h5 class="fw-bold text-white">Faculty Approval</h5>
+          <p class="text-secondary small">Authorized faculty/Principal reviews request in 3 stages: Pending, Approved, or Declined.</p>
+        </div>
+      </div>
+      <div class="col-md-3">
+        <div class="card glass-card p-4 h-100 border-0">
+          <div class="stat-icon bg-success text-white mb-3 fw-bold fs-4">4</div>
+          <h5 class="fw-bold text-white">Track & Handover</h5>
+          <p class="text-secondary small">Use your unique tracking code to view approval status and collect items at the central lab.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+{% endblock %}
