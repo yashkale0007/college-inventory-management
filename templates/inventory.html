@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Inventory Stock & Assets | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container-fluid py-4 px-md-5">
+  
+  <div class="d-flex flex-wrap justify-content-between align-items-center mb-4">
+    <div>
+      <h2 class="fw-bold mb-1 text-white"><i class="bi bi-boxes text-info me-2"></i>Inventory Stock & Asset Master</h2>
+      <p class="text-secondary small m-0">Master catalog of apparatus, lab consumables, IT hardware, sports kits, and stationery.</p>
+    </div>
+    <div class="d-flex gap-2">
+      {% if session.get('role') in ['admin', 'faculty'] %}
+        <button type="button" class="btn btn-cims-primary" data-bs-toggle="modal" data-bs-target="#addItemModal">
+          <i class="bi bi-plus-lg me-1"></i> Register New Asset
+        </button>
+      {% endif %}
+      <a href="{{ url_for('audit_logs') }}" class="btn btn-cims-outline">
+        <i class="bi bi-journal-text me-1"></i> Stock Ledger
+      </a>
+    </div>
+  </div>
+
+  <!-- Search & Category Filters -->
+  <div class="card glass-card p-3 mb-4 shadow-sm">
+    <form action="{{ url_for('manage_inventory') }}" method="GET" class="row g-2 align-items-center">
+      <div class="col-md-7">
+        <input type="text" name="q" class="form-control" placeholder="Search item, location, or department..." value="{{ search_q }}">
+      </div>
+      <div class="col-md-3">
+        <select name="category_id" class="form-select" onchange="this.form.submit()">
+          <option value="">All Categories</option>
+          {% for c in categories %}
+            <option value="{{ c.category_id }}" {% if selected_cat == c.category_id %}selected{% endif %}>{{ c.category_name }}</option>
+          {% endfor %}
+        </select>
+      </div>
+      <div class="col-md-2 d-flex gap-1">
+        <button type="submit" class="btn btn-cims-primary w-100">Search</button>
+        {% if search_q or selected_cat %}
+          <a href="{{ url_for('manage_inventory') }}" class="btn btn-dark border border-secondary" title="Reset"><i class="bi bi-arrow-clockwise"></i></a>
+        {% endif %}
+      </div>
+    </form>
+  </div>
+
+  <!-- Stock Table -->
+  <div class="card glass-card p-4 shadow-sm">
+    <div class="table-responsive">
+      <table class="table table-cims">
+        <thead>
+          <tr>
+            <th>Item / Asset Name</th>
+            <th>Category & Dept</th>
+            <th>Physical Stock</th>
+            <th>Reserved Stock</th>
+            <th>Available Stock</th>
+            <th>Min Threshold</th>
+            <th>Location</th>
+            <th class="text-end">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for itm in items %}
+            <tr>
+              <td>
+                <div class="fw-bold text-white fs-6">{{ itm.item_name }}</div>
+                <small class="text-secondary">{{ itm.description or 'No extra description' }}</small>
+              </td>
+
+              <td>
+                <span class="badge bg-primary-subtle text-info border border-info border-opacity-25">{{ itm.category_name }}</span>
+                <div class="small text-secondary mt-1">{{ itm.department }}</div>
+              </td>
+
+              <td>
+                <span class="fw-bold fs-6 text-light">{{ itm.physical_quantity }}</span> <small class="text-secondary">{{ itm.unit }}</small>
+              </td>
+
+              <td>
+                <span class="badge bg-warning-subtle text-warning border border-warning border-opacity-25">{{ itm.reserved_quantity }} {{ itm.unit }}</span>
+              </td>
+
+              <td>
+                <span class="fw-bold fs-6 {% if itm.available_quantity <= itm.minimum_quantity %}text-danger{% else %}text-success{% endif %}">
+                  {{ itm.available_quantity }} {{ itm.unit }}
+                </span>
+                {% if itm.available_quantity <= itm.minimum_quantity %}
+                  <span class="badge bg-danger ms-1" style="font-size: 0.65rem;">LOW</span>
+                {% endif %}
+              </td>
+
+              <td>
+                <span class="badge bg-dark text-secondary border border-secondary">{{ itm.minimum_quantity }} {{ itm.unit }}</span>
+              </td>
+
+              <td>
+                <span class="small text-secondary"><i class="bi bi-geo-alt me-1 text-warning"></i>{{ itm.location }}</span>
+              </td>
+
+              <td class="text-end">
+                <div class="btn-group">
+                  <button type="button" class="btn btn-sm btn-outline-success" onclick="openReplenishModal('{{ itm.item_id }}', '{{ itm.item_name|escape }}', '{{ itm.physical_quantity }}', '{{ itm.unit }}')" title="Replenish / Stock In">
+                    <i class="bi bi-plus-circle me-1"></i> Restock
+                  </button>
+                  <button type="button" class="btn btn-sm btn-outline-secondary" onclick="openEditItemModal('{{ itm.item_id }}', '{{ itm.item_name|escape }}', '{{ itm.minimum_quantity }}', '{{ itm.location|escape }}', '{{ itm.description|escape }}')" title="Edit Specs">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<!-- Modal: Add New Asset -->
+<div class="modal fade" id="addItemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-centered">
+    <div class="modal-content">
+      <form action="{{ url_for('add_item') }}" method="POST">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-box-seam me-2 text-info"></i>Register New College Inventory Item</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="row g-3">
+            <div class="col-md-8">
+              <label class="form-label fw-semibold small text-light">Product / Asset Name *</label>
+              <input type="text" name="item_name" class="form-control" placeholder="e.g. Digital Storage Oscilloscope (DSO 50MHz)" required>
+            </div>
+            <div class="col-md-4">
+              <label class="form-label fw-semibold small text-light">Category *</label>
+              <select name="category_id" class="form-select" required>
+                {% for c in categories %}
+                  <option value="{{ c.category_id }}">{{ c.category_name }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small text-light">Department *</label>
+              <select name="department" class="form-select" required>
+                {% for dept in departments %}
+                  <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-light">Initial Stock Qty</label>
+              <input type="number" name="physical_quantity" class="form-control" value="10" min="0" required>
+            </div>
+
+            <div class="col-md-3">
+              <label class="form-label fw-semibold small text-light">Unit Type</label>
+              <input type="text" name="unit" class="form-control" value="Units" placeholder="Units / Pieces / Kits / Reams" required>
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small text-light">Storage Room / Lab Location</label>
+              <input type="text" name="location" class="form-control" placeholder="e.g. Physics Lab B, Rack 3">
+            </div>
+
+            <div class="col-md-6">
+              <label class="form-label fw-semibold small text-light">Low-Stock Alert Threshold</label>
+              <input type="number" name="minimum_quantity" class="form-control" value="5" min="1">
+            </div>
+
+            <div class="col-12">
+              <label class="form-label fw-semibold small text-light">Technical Specifications / Description</label>
+              <textarea name="description" class="form-control" rows="2" placeholder="Specifications, model number, supplier or usage guidelines..."></textarea>
+            </div>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-cims-primary fw-bold">Register Asset & Stock</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Replenish Stock -->
+<div class="modal fade" id="replenishModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="replenishForm" method="POST">
+        <div class="modal-header bg-success text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-plus-circle me-2"></i>Replenish Inventory Stock</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <p>Product: <strong id="replenishItemName" class="text-white"></strong></p>
+          <p class="text-secondary small">Current Physical Stock: <span id="replenishCurrentStock" class="badge bg-secondary"></span></p>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Quantity to Add (Stock In) *</label>
+            <input type="number" name="added_quantity" class="form-control form-control-lg" min="1" value="10" required>
+          </div>
+
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Replenishment Remarks / Invoice Ref</label>
+            <input type="text" name="remarks" class="form-control" placeholder="e.g. Purchase order PO-2026-44 received">
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-success fw-bold">Confirm Stock In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Edit Item Specs -->
+<div class="modal fade" id="editItemModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <form id="editItemForm" method="POST">
+        <div class="modal-header bg-dark text-white">
+          <h5 class="modal-title fw-bold"><i class="bi bi-pencil-square me-2 text-info"></i>Edit Item Details</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4">
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Item Name</label>
+            <input type="text" id="editItemName" name="item_name" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Minimum Threshold</label>
+            <input type="number" id="editItemMinQty" name="minimum_quantity" class="form-control" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Storage Room / Location</label>
+            <input type="text" id="editItemLocation" name="location" class="form-control">
+          </div>
+          <div class="mb-3">
+            <label class="form-label fw-semibold small text-light">Description</label>
+            <textarea id="editItemDesc" name="description" class="form-control" rows="2"></textarea>
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-primary fw-bold">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
