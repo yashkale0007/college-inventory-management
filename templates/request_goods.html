@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Request Product | Shri Shivaji Science College CIMS{% endblock %}
+
+{% block content %}
+<div class="container py-4">
+  <div class="row justify-content-center">
+    <div class="col-lg-8">
+      
+      <!-- Glassmorphic Request Card -->
+      <div class="card glass-card p-4 p-md-5 mb-4 shadow-lg position-relative overflow-hidden">
+        
+        <div class="d-flex align-items-center gap-2 mb-2 text-info fw-bold small text-uppercase">
+          <i class="bi bi-send-plus-fill"></i> No Login Required for Students or Teachers
+        </div>
+        <h2 class="fw-bold mb-2 text-white">College Resource Requisition Form</h2>
+        <p class="text-secondary small mb-4">
+          Students and Teachers of <strong class="text-white">Shri Shivaji Science College Amravati</strong> can requisition laboratory equipment, IT gear, sports kits, and stationery below. You will receive an instant <strong class="text-info">Tracking Code</strong> to monitor approvals.
+        </p>
+
+        <form action="{{ url_for('request_goods') }}" method="POST" class="needs-validation">
+          
+          <!-- Requester Type Toggle -->
+          <div class="mb-4">
+            <label class="form-label fw-bold small text-uppercase text-secondary">I am submitting as a :</label>
+            <div class="row g-2">
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="requester_type" id="typeStudent" value="student" checked>
+                <label class="btn btn-cims-outline w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2" for="typeStudent">
+                  <i class="bi bi-mortarboard-fill fs-5"></i> College Student
+                </label>
+              </div>
+              <div class="col-6">
+                <input type="radio" class="btn-check" name="requester_type" id="typeFaculty" value="faculty">
+                <label class="btn btn-cims-outline w-100 py-3 fw-bold d-flex align-items-center justify-content-center gap-2" for="typeFaculty">
+                  <i class="bi bi-person-workspace fs-5"></i> Teacher / Faculty
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Personal Identification -->
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="requester_name" class="form-label fw-semibold small text-light" id="nameLabel">Full Name (Student) <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-person text-info"></i></span>
+                <input type="text" class="form-control" id="requester_name" name="requester_name" placeholder="e.g. Athar Khan (Final Year B.Sc)" required>
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="requester_email" class="form-label fw-semibold small text-light" id="emailLabel">Student Email Address <span class="text-danger">*</span></label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-envelope text-info"></i></span>
+                <input type="email" class="form-control" id="requester_email" name="requester_email" placeholder="e.g. athar.student@shivajisc.org" required>
+              </div>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-4">
+            <div class="col-md-6">
+              <label for="requester_id_num" class="form-label fw-semibold small text-light" id="idLabel">College Roll No / PRN No</label>
+              <div class="input-group">
+                <span class="input-group-text"><i class="bi bi-card-text text-info"></i></span>
+                <input type="text" class="form-control" id="requester_id_num" name="requester_id_num" placeholder="e.g. STU-2023-CS-042">
+              </div>
+            </div>
+            <div class="col-md-6">
+              <label for="department" class="form-label fw-semibold small text-light">Academic Department <span class="text-danger">*</span></label>
+              <select class="form-select" id="department" name="department" required>
+                <option value="" disabled selected>Choose Department...</option>
+                {% for dept in departments %}
+                  <option value="{{ dept }}">{{ dept }}</option>
+                {% endfor %}
+              </select>
+            </div>
+          </div>
+
+          <hr class="border-secondary border-opacity-25 my-4">
+
+          <!-- Item Selection & Quantity -->
+          <h5 class="fw-bold mb-3 text-white"><i class="bi bi-box2-fill text-info me-2"></i>Product Requisition Details</h5>
+
+          <div class="mb-3">
+            <label for="itemSelect" class="form-label fw-semibold small text-light">Select Product / Asset <span class="text-danger">*</span></label>
+            <select class="form-select form-select-lg" id="itemSelect" name="item_id" required>
+              <option value="" disabled {% if not preselected_item_id %}selected{% endif %}>Search & Select Equipment or Supply...</option>
+              {% for itm in items %}
+                <option value="{{ itm.item_id }}" 
+                        data-stock="{{ itm.available_quantity }}" 
+                        data-unit="{{ itm.unit }}"
+                        {% if preselected_item_id == itm.item_id %}selected{% endif %}>
+                  {{ itm.item_name }} ({{ itm.department }}) — [Avail: {{ itm.available_quantity }} {{ itm.unit }}]
+                </option>
+              {% endfor %}
+            </select>
+            <div class="mt-2" id="availableStockBadge">
+              <span class="badge bg-dark text-secondary border border-secondary px-3 py-2">Select an item above to view available stock</span>
+            </div>
+          </div>
+
+          <div class="row g-3 mb-3">
+            <div class="col-md-6">
+              <label for="requestedQuantity" class="form-label fw-semibold small text-light">Quantity Required <span class="text-danger">*</span></label>
+              <input type="number" class="form-control" id="requestedQuantity" name="requested_quantity" min="1" value="1" required>
+              <small class="text-secondary d-block mt-1" id="maxQtyHint">Enter the physical quantity required.</small>
+            </div>
+            <div class="col-md-6">
+              <label for="urgency" class="form-label fw-semibold small text-light">Urgency Level</label>
+              <select class="form-select" id="urgency" name="urgency">
+                <option value="Normal" selected>Normal (Standard Class / Lab)</option>
+                <option value="High">High (Impending Practical / Exam / Event)</option>
+                <option value="Critical">Critical (Immediate Emergency Requirement)</option>
+                <option value="Low">Low (Buffer / Anticipatory Supply)</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="mb-4">
+            <label for="purpose" class="form-label fw-semibold small text-light">Academic Purpose / Justification <span class="text-danger">*</span></label>
+            <textarea class="form-control" id="purpose" name="purpose" rows="3" placeholder="Provide detailed purpose (e.g., Final Year Capstone Project experimental titration / Semester 6 practical demonstration / Research seminar)..." required></textarea>
+            <small class="text-secondary">Faculty & Approving authority require clear purpose to approve stock reservation.</small>
+          </div>
+
+          <div class="d-grid gap-2">
+            <button type="submit" class="btn btn-cims-primary btn-lg py-3 fw-bold">
+              <i class="bi bi-send-check-fill me-2"></i> Submit Requisition & Generate Tracking Code
+            </button>
+            <a href="{{ url_for('track') }}" class="btn btn-link text-secondary text-decoration-none text-center small">
+              Already have a tracking code? Check status here &rarr;
+            </a>
+          </div>
+
+        </form>
+      </div>
+
+    </div>
+  </div>
+</div>
+{% endblock %}
